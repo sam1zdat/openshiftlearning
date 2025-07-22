@@ -37,16 +37,15 @@ echo "=== [Custom S2I] Build Petclinic - $(date) ===" > /tmp/info-build.txt
 # Par exemple, tu pourrais injecter un secret, télécharger un fichier, modifier un .properties ici
 
 # Lance le build Maven standard (S2I Java attend ce script !)
-exec /usr/libexec/s2i/assemble
+exec /usr/local/s2i/assemble
 ```
 
-Lancer un pod temporaire : 
+Lancer un pod temporaire pour vérifier l'emplacement de s2i: 
 
 ```bash
 oc run s2i-debug --rm -ti --image=registry.redhat.io/ubi8/openjdk-17 -- bash
 
 ls /usr/local/s2i/
-ls /usr/libexec/s2i/
 ```
 
 Rends-le exécutable :
