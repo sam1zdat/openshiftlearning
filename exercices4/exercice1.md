@@ -33,8 +33,15 @@ cd spring-petclinic
 
 ```bash
 oc new-build --binary --name=spring-petclinic --image-stream=openshift/ubi8-openjdk-17:1.18
-
 ```
+---
+
+### **Ce que la commande fait concrètement**
+
+* Crée un objet **BuildConfig** nommé `spring-petclinic` : définit comment sera construit le code.
+* Crée un objet **ImageStream** nommé `spring-petclinic` : référencera l’image générée.
+* Se base sur le builder S2I `ubi8-openjdk-17` pour la construction.
+* Attend que tu fournisses le code source via une commande suivante (`oc start-build ...`).
 
 ---
 
@@ -43,6 +50,17 @@ oc new-build --binary --name=spring-petclinic --image-stream=openshift/ubi8-open
 ```bash
 oc start-build spring-petclinic --from-dir=. --follow
 ```
+
+* **Démarre un build** pour le BuildConfig `spring-petclinic`.
+* **--from-dir=.** : Envoie le code source du dossier courant.
+* **--follow** : Affiche les logs en temps réel.
+
+### **Objets OpenShift impliqués** :
+
+* **BuildConfig** : (déjà créé) définit comment construire l’image.
+* **Build** : nouvel objet créé à chaque `start-build` (ex : `build/spring-petclinic-1`).
+* **ImageStream** : (déjà créé) reçoit l’image générée à la fin du build.
+
 ### en cas d'erreur, lancer 
 ```bash
 oc logs build/spring-petclinic-1 | less
