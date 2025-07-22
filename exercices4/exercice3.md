@@ -110,5 +110,3 @@ oc get route
 * **Idéal pour des pipelines CI/CD industriels !**
 
 ---
-
-Dis-moi si tu veux un exemple pour injecter un **secret** via `.s2i/bin/assemble`, ou un script qui télécharge un artefact/dépendance externe avant le build Maven !
