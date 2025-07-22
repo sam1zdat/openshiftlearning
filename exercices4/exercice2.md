@@ -48,7 +48,7 @@ oc new-app petclinic-app
 
 ```bash
 oc get deployment
-oc descibe deployment petclinic-app
+oc describe deployment petclinic-app
 ```
 
 ```bash
