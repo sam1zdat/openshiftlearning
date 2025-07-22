@@ -20,7 +20,7 @@ oc get projects
 
 ---
 
-#### 2️⃣ **Créer un projet de test**
+#### 2️⃣ **Créer un projet de test(optionnel dans sandbox)**
 
 ```bash
 oc new-project tp-cli
