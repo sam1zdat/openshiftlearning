@@ -73,10 +73,10 @@ Découvrir les principales fonctionnalités de la console web OpenShift :
 * Clique sur la **Route** générée, ouvre-la dans ton navigateur.
 https://spring-petclinic-git-alfred-delay-dev.apps.rm1.0a51.p1.openshiftapps.com
 
-#### 8. **Supprime l’application ou le projet**
+#### 8. **Supprime l’application ou le projet (à ne pas faire si vous voulez faire la suite des exercices)**
 
 * Clique sur le menu de l’application → “Delete”
-* Vous pouvez aussi surimer toutes les ressources avec cette commande:
+* Vous pouvez aussi suprimer toutes les ressources avec cette commande:
 
 ```bash
 oc delete all --all
