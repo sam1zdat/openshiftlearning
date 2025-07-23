@@ -3,7 +3,7 @@
 
 ### 1.1 Création d'un modèle multi-conteneurs complet
 
-1. Créez un nouveau projet :
+1. Créez un nouveau projet(pas sur Sandbox) :
    ```bash
    oc new-project tp3-templates-<votre-nom>
    ```
