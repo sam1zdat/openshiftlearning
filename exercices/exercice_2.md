@@ -52,7 +52,7 @@
 
 1. Déployez une version de production dans un nouveau projet :
    ```bash
-   oc new-project tp3-templates-prod-<votre-nom>
+   oc new-project tp3-templates-prod-<votre-nom> (impossible sur Sandbox)
    ou
    oc delete all -l app=three-tier-app
    oc new-app --template=three-tier-app --param-file=production-params.env
