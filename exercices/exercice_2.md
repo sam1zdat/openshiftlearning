@@ -8,7 +8,7 @@
    oc new-project tp3-templates-<votre-nom>
    ```
 
-2. Créez un modèle pour une application à trois tiers (frontend, backend, base de données) :
+2. Créez un fichier three-tier-template.yaml et créez un modèle pour une application à trois tiers (frontend, backend, base de données) :
    ```bash   
    oc create -f three-tier-template.yaml
    ```
