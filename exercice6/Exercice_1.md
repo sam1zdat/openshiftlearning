@@ -13,7 +13,7 @@
 
 ---
 
-## 1. Créer un projet dédié
+## 1. Créer un projet dédié (non disponible dans Sandbox)
 
 ```bash
 oc new-project tp-monitoring
