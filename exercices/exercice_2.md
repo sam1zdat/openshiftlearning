@@ -35,19 +35,19 @@
 
 1. Créez un fichier de paramètres pour l'environnement de production `production-params.env`:
    ```bash
-  BACKEND_REPLICAS=3
-  FRONTEND_REPLICAS=3
-  BACKEND_MEMORY_LIMIT=1Gi
-  BACKEND_CPU_LIMIT=1000m
-  FRONTEND_MEMORY_LIMIT=512Mi
-  FRONTEND_CPU_LIMIT=500m
-  LOGGING_LEVEL=WARN
-  ENABLE_EXPERIMENTAL_FEATURES=false
-  DATABASE_SERVICE_NAME=postgresqldemo
-  DATABASE_NAME=demodb
-  BACKEND_SERVICE_NAME=backenddemo
-  FRONTEND_SERVICE_NAME=frontenddemo
-  APP_CONFIG_MAP=app-config-demo
+     BACKEND_REPLICAS=3
+     FRONTEND_REPLICAS=3
+     BACKEND_MEMORY_LIMIT=1Gi
+     BACKEND_CPU_LIMIT=1000m
+     FRONTEND_MEMORY_LIMIT=512Mi
+     FRONTEND_CPU_LIMIT=500m
+     LOGGING_LEVEL=WARN
+     ENABLE_EXPERIMENTAL_FEATURES=false
+     DATABASE_SERVICE_NAME=postgresqldemo
+     DATABASE_NAME=demodb
+     BACKEND_SERVICE_NAME=backenddemo
+     FRONTEND_SERVICE_NAME=frontenddemo
+     APP_CONFIG_MAP=app-config-demo
    ```
 
 1. Déployez une version de production dans un nouveau projet :
