@@ -1,0 +1,345 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: three-tier-app
+  annotations:
+    description: "Template for a three-tier application (frontend, backend, database)"
+    tags: "quickstart,nodejs,java,postgresql"
+objects:
+# Secret pour la base de données
+- apiVersion: v1
+  kind: Secret
+  metadata:
+    name: ${DATABASE_SERVICE_NAME}
+  stringData:
+    database-user: ${DATABASE_USER}
+    database-password: ${DATABASE_PASSWORD}
+    database-admin-password: ${DATABASE_ADMIN_PASSWORD}
+
+# Service et déploiement pour la base de données
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${DATABASE_SERVICE_NAME}
+  spec:
+    ports:
+    - name: postgresql
+      port: 5432
+    selector:
+      name: ${DATABASE_SERVICE_NAME}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${DATABASE_SERVICE_NAME}
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        name: ${DATABASE_SERVICE_NAME}
+    template:
+      metadata:
+        labels:
+          name: ${DATABASE_SERVICE_NAME}
+      spec:
+        containers:
+        - name: postgresql
+          image: quay.io/sclorg/postgresql-13-c8s
+          ports:
+          - containerPort: 5432
+          env:
+          - name: POSTGRESQL_USER
+            valueFrom:
+              secretKeyRef:
+                name: ${DATABASE_SERVICE_NAME}
+                key: database-user
+          - name: POSTGRESQL_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${DATABASE_SERVICE_NAME}
+                key: database-password
+          - name: POSTGRESQL_DATABASE
+            value: ${DATABASE_NAME}
+          volumeMounts:
+          - name: postgresql-data
+            mountPath: /var/lib/pgsql/data
+        volumes:
+        - name: postgresql-data
+          emptyDir: {}
+
+# Service et déploiement pour le backend
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${BACKEND_SERVICE_NAME}
+  spec:
+    ports:
+    - name: http
+      port: 8080
+    selector:
+      name: ${BACKEND_SERVICE_NAME}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${BACKEND_SERVICE_NAME}
+  spec:
+    replicas: ${{BACKEND_REPLICAS}}
+    selector:
+      matchLabels:
+        name: ${BACKEND_SERVICE_NAME}
+    template:
+      metadata:
+        labels:
+          name: ${BACKEND_SERVICE_NAME}
+      spec:
+        containers:
+        - name: backend
+          image: ${BACKEND_IMAGE}
+          ports:
+          - containerPort: 8080
+          env:
+          - name: DATABASE_SERVICE_NAME
+            value: ${DATABASE_SERVICE_NAME}
+          - name: DATABASE_USER
+            valueFrom:
+              secretKeyRef:
+                name: ${DATABASE_SERVICE_NAME}
+                key: database-user
+          - name: DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: ${DATABASE_SERVICE_NAME}
+                key: database-password
+          - name: DATABASE_NAME
+            value: ${DATABASE_NAME}
+          - name: DATABASE_PORT
+            value: "5432"
+          resources:
+            limits:
+              memory: ${BACKEND_MEMORY_LIMIT}
+              cpu: ${BACKEND_CPU_LIMIT}
+            requests:
+              memory: ${BACKEND_MEMORY_REQUEST}
+              cpu: ${BACKEND_CPU_REQUEST}
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 15
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+
+# Service, route et déploiement pour le frontend
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: ${FRONTEND_SERVICE_NAME}
+  spec:
+    ports:
+    - name: http
+      port: 8080
+    selector:
+      name: ${FRONTEND_SERVICE_NAME}
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: ${FRONTEND_SERVICE_NAME}
+  spec:
+    host: ${APPLICATION_DOMAIN}
+    to:
+      kind: Service
+      name: ${FRONTEND_SERVICE_NAME}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: ${FRONTEND_SERVICE_NAME}
+  spec:
+    replicas: ${{FRONTEND_REPLICAS}}
+    selector:
+      matchLabels:
+        name: ${FRONTEND_SERVICE_NAME}
+    template:
+      metadata:
+        labels:
+          name: ${FRONTEND_SERVICE_NAME}
+      spec:
+        containers:
+        - name: frontend
+          image: ${FRONTEND_IMAGE}
+          ports:
+          - containerPort: 8080
+          env:
+          - name: BACKEND_URL
+            value: http://${BACKEND_SERVICE_NAME}:8080
+          resources:
+            limits:
+              memory: ${FRONTEND_MEMORY_LIMIT}
+              cpu: ${FRONTEND_CPU_LIMIT}
+            requests:
+              memory: ${FRONTEND_MEMORY_REQUEST}
+              cpu: ${FRONTEND_CPU_REQUEST}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+
+# ConfigMap pour la configuration de l'application
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: ${APP_CONFIG_MAP}
+  data:
+    app.properties: |
+      environment=${ENVIRONMENT}
+      logging.level=${LOGGING_LEVEL}
+      feature.experimental=${ENABLE_EXPERIMENTAL_FEATURES}
+
+parameters:
+# Paramètres généraux
+- name: ENVIRONMENT
+  displayName: Environment
+  description: Environment (dev, test, prod)
+  required: true
+  value: dev
+- name: APPLICATION_DOMAIN
+  displayName: Application Domain
+  description: The exposed hostname for the application
+  value: ""
+- name: APP_CONFIG_MAP
+  displayName: Application ConfigMap
+  description: Name of the ConfigMap for application configuration
+  required: true
+  value: app-config
+
+# Paramètres de base de données
+- name: DATABASE_SERVICE_NAME
+  displayName: Database Service Name
+  description: The name of the PostgreSQL service
+  required: true
+  value: postgresql
+- name: DATABASE_USER
+  displayName: PostgreSQL Username
+  description: Username for PostgreSQL user
+  required: true
+  value: dbuser
+- name: DATABASE_PASSWORD
+  displayName: PostgreSQL Password
+  description: Password for the PostgreSQL user
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+- name: DATABASE_ADMIN_PASSWORD
+  displayName: PostgreSQL Admin Password
+  description: Password for the PostgreSQL admin user
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+- name: DATABASE_NAME
+  displayName: Database Name
+  description: Name of the PostgreSQL database
+  required: true
+  value: appdb
+
+# Paramètres du backend
+- name: BACKEND_SERVICE_NAME
+  displayName: Backend Service Name
+  description: Name of the backend service
+  required: true
+  value: backend
+- name: BACKEND_IMAGE
+  displayName: Backend Image
+  description: Backend Docker image to use
+  required: true
+  value: nginxinc/nginx-unprivileged:latest
+- name: BACKEND_REPLICAS
+  displayName: Backend Replicas
+  description: Number of backend replicas
+  required: true
+  value: "2"
+  parse: integer
+- name: BACKEND_MEMORY_LIMIT
+  displayName: Backend Memory Limit
+  description: Maximum amount of memory the backend container can use
+  required: true
+  value: 512Mi
+- name: BACKEND_CPU_LIMIT
+  displayName: Backend CPU Limit
+  description: Maximum amount of CPU the backend container can use
+  required: true
+  value: 500m
+- name: BACKEND_MEMORY_REQUEST
+  displayName: Backend Memory Request
+  description: Requested amount of memory for the backend container
+  required: true
+  value: 256Mi
+- name: BACKEND_CPU_REQUEST
+  displayName: Backend CPU Request
+  description: Requested amount of CPU for the backend container
+  required: true
+  value: 200m
+
+# Paramètres du frontend
+- name: FRONTEND_SERVICE_NAME
+  displayName: Frontend Service Name
+  description: Name of the frontend service
+  required: true
+  value: frontend
+- name: FRONTEND_IMAGE
+  displayName: Frontend Image
+  description: Frontend Docker image to use
+  required: true
+  value: nginxinc/nginx-unprivileged:latest
+- name: FRONTEND_REPLICAS
+  displayName: Frontend Replicas
+  description: Number of frontend replicas
+  required: true
+  value: "2"
+  parse: integer
+- name: FRONTEND_MEMORY_LIMIT
+  displayName: Frontend Memory Limit
+  description: Maximum amount of memory the frontend container can use
+  required: true
+  value: 256Mi
+- name: FRONTEND_CPU_LIMIT
+  displayName: Frontend CPU Limit
+  description: Maximum amount of CPU the frontend container can use
+  required: true
+  value: 300m
+- name: FRONTEND_MEMORY_REQUEST
+  displayName: Frontend Memory Request
+  description: Requested amount of memory for the frontend container
+  required: true
+  value: 128Mi
+- name: FRONTEND_CPU_REQUEST
+  displayName: Frontend CPU Request
+  description: Requested amount of CPU for the frontend container
+  required: true
+  value: 100m
+
+# Paramètres de configuration
+- name: LOGGING_LEVEL
+  displayName: Logging Level
+  description: Logging level (INFO, DEBUG, WARN, ERROR)
+  required: true
+  value: INFO
+- name: ENABLE_EXPERIMENTAL_FEATURES
+  displayName: Enable Experimental Features
+  description: Enable experimental features (true/false)
+  required: true
+  value: "false"
