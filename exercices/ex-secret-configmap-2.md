@@ -148,7 +148,7 @@ oc apply -f app-demo-pod.yaml
 * **Décoder un champ secret** (exemple avec la commande `base64`) :
 
   ```bash
-  oc get secret app-secret -o jsonpath="{.data.dbpassword.txt}" | base64 -d
+  oc get secret app-secret -o jsonpath="{.data.dbpassword\.txt}" | base64 -d
   ```
 
 * **Vérifie les droits d’accès sur les fichiers montés** :
@@ -168,3 +168,4 @@ oc delete secret app-secret
 ```
 
 ---
+
